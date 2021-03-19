@@ -1,0 +1,12 @@
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=True	self.wwm=False	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.1406	LM_wer_avg=0.1157
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=True	self.wwm=False	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.1406	LM_wer_avg=0.1253
+
+self.lm_path='hfl/chinese-roberta-wwm-ext'	self.use_confusion_word=True	self.wwm=False	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.1406	LM_wer_avg=0.5718
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/checkpoint-869000/'	self.use_confusion_word=True	self.wwm=False	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.1406	LM_wer_avg=0.1375
+

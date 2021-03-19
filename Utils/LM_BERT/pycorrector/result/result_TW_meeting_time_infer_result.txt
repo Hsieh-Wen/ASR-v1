@@ -1,0 +1,72 @@
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=True	self.reverse=True	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8540
+
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=True	self.reverse=True	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8956
+
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=True	self.reverse=False	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8458
+
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=True	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8956
+
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=False	self.reverse=True	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7208
+
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=False	self.reverse=True	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7600
+
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=False	self.reverse=False	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7187
+
+self.lm_path='./LM_models/V1_bert_base3/'	self.use_confusion_word=False	self.wwm=False	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7600
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=True	self.reverse=True	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8680
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=True	self.reverse=True	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.9072
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=True	self.reverse=False	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8562
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=True	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.9072
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=False	self.reverse=True	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7575
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=False	self.reverse=True	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7868
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=False	self.reverse=False	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7486
+
+self.lm_path='./LM_models/V1_bert_base5/'	self.use_confusion_word=False	self.wwm=False	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7868
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=True	self.reverse=True	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8812
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=True	self.reverse=True	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.9195
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=True	self.reverse=False	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.8775
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=True	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.9195
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=False	self.reverse=True	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7612
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=False	self.reverse=True	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7975
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=False	self.reverse=False	self.token_replace=True	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7571
+
+self.lm_path='./LM_models/V1_roberta_wwm_ext2/'	self.use_confusion_word=False	self.wwm=False	self.reverse=False	self.token_replace=False	self.muti_method=False	self.replace='intersection'
+ASR_wer_avg=0.5686	LM_wer_avg=0.7975
+
