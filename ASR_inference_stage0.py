@@ -39,7 +39,7 @@ class InferenceASRmodels():
         asr_modes = config['Stage0_asr_inference'].get('ASR_MODE')
         self.device = config['Stage0_asr_inference'].get('DEVICE')    
         model_paths = config['Stage0_asr_inference'].get('MODEL_PATH') 
-        self.espnet_use_lm = config['Stage0_asr_inference'].getboolean('ESPNET_USE_LM') 
+
         
         # parameters of inference function
         self.wav_folder = config['Stage0_asr_inference'].get('WAV_FOLDER')  
@@ -73,7 +73,7 @@ class InferenceASRmodels():
         self.inference_file_list = inference_files.split("|")    
 
     
-    def Load_Model(self, model_path, device, espnet_use_lm):
+    def Load_Model(self, model_path, device):
         """
         目前有四種 ASR Model(MASR、Quartznet、Espnet、Google_ASR).
         
@@ -98,7 +98,7 @@ class InferenceASRmodels():
             print("Load Quartznet model !")
             
         elif self.asr_mode == "Espnet":
-            self.espnet_infer = EspnetInference(model_path, device, espnet_use_lm) 
+            self.espnet_infer = EspnetInference(model_path, device) 
             ASR_model =  self.espnet_infer.espnet_model
             print("Load Espnet model !") 
         
@@ -151,7 +151,7 @@ class InferenceASRmodels():
             self.asr_mode = asr_mode
             for infer_file in self.inference_file_list:
                 # Load ASR Model 
-                self.ASR_model = self.Load_Model(model_path, self.device, self.espnet_use_lm)
+                self.ASR_model = self.Load_Model(model_path, self.device)
                 ASR_wer_avg, asr_truth, asr_predict_result, wer_list = self.inference_data(self.wav_folder, infer_file, self.convert_word)
     
                 kwargs = {'Inference_Mode':'ASR', 'Input_File': infer_file, 'Model_Path': model_path,

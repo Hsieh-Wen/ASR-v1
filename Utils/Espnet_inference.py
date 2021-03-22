@@ -14,14 +14,14 @@ from CSV_utils import read_csv_file, delete_blank
 from wer_eval import eval_asr
 
 class EspnetInference():
-    def __init__(self, model_path, device, espnet_use_lm):
+    def __init__(self, model_path, device):
         assert len(model_path) == 2 , "Espnet need two model path !!"
         asr_model_path = model_path[0]
         lm_model_path = model_path[1]
-        self.espnet_model = self.espnet_load_model(asr_model_path, lm_model_path, device, espnet_use_lm)            
+        self.espnet_model = self.espnet_load_model(asr_model_path, lm_model_path, device)            
 
     @staticmethod
-    def espnet_load_model(asr_model_path, lm_model_path, device, espnet_use_lm):     
+    def espnet_load_model(asr_model_path, lm_model_path, device):     
         
         asr_model_folders = asr_model_path.split("/")
         asr_config_folder = "/".join(asr_model_folders[0:-1])
@@ -66,7 +66,10 @@ class EspnetInference():
         # print(asr_predict)
         if convert_word:
             cc = OpenCC('s2tw')
-            asr_predict = cc.convert(asr_predict)            
+            asr_predict = cc.convert(asr_predict)    
+            
+        if asr_predict == "":
+            asr_predict ="無法辨識"
         return asr_predict    
         
         
@@ -89,16 +92,14 @@ class EspnetInference():
 
     
 if __name__ == "__main__":
-    model_path = ["../Models/ASR_models/espnet_v1/asr_train_asr_conformer_raw_zh_char_sp/valid.acc.ave_10best.pth",
-                  "../Models/ASR_models/espnet_v1/lm_train_lm_transformer_zh_char/valid.loss.ave_10best.pth"]
+    model_path = ["/home/c95hcw/ASR_Data/Models/ASR_models/Espnet/espnet_v1.0/asr_train_asr_conformer_raw_zh_char_sp/valid.acc.best.pth", "/home/c95hcw/ASR_Data/Models/ASR_models/Espnet/espnet_v1.0/lm_train_lm_transformer_zh_char/valid.loss.ave_10best.pth"]
     device = "gpu"
-    espnet_use_lm = True
     
-    wav_folder = "../Dataset/raw_data/waves/"
-    inference_file = "../Dataset/raw_data/csvs/TW_test.csv"
+    wav_folder = "/home/c95hcw/ASR_Data/Dataset/raw_data/waves/"
+    inference_file = "/home/c95hcw/ASR_Data/Dataset/raw_data/csvs/TW_test.csv"
     convert_word = False
     
-    espnet_infer = EspnetInference(model_path, device, espnet_use_lm) 
+    espnet_infer = EspnetInference(model_path, device) 
     ASR_wer_avg, asr_truth, asr_predict_result, wer_list = espnet_infer.espnet_recognition(wav_folder, inference_file, convert_word)   
 
 

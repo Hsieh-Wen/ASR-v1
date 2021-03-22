@@ -16,6 +16,7 @@ def eval_asr(asr_truth,asr_predict_result):
       # cul wer
        asr_predict_result[i], asr_truth[i] = asr_predict_result[i].replace(" ", ""), asr_truth[i].replace(" ", "")
        wer = Lev.distance(asr_predict_result[i], asr_truth[i]) / float(len(asr_truth[i]))
+#       print(f"{wer}")
        wer_list.append(wer)
     ASR_wer_avg = np.sum(wer_list)/len(wer_list)        
     return ASR_wer_avg, wer_list
