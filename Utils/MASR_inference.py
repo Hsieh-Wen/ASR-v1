@@ -8,7 +8,7 @@ Created on Thu Mar  4 16:23:32 2021
 import sys
 sys.path.append("./masr_util")
 from models.conv import GatedConv
-from CSV_utils import read_csv_file, delete_blank
+from CSV_utils import read_csv_file, delete_blank, remove_punctuation
 from opencc import OpenCC
 from wer_eval import eval_asr
 
@@ -38,6 +38,8 @@ class MasrInference():
         # load csv data 
         wave_names, asr_truth = read_csv_file(inference_file)  
         asr_truth = delete_blank(asr_truth)
+        asr_truth = remove_punctuation(asr_truth)
+        
         # MASR predict
         asr_predict_result = []
         for i in range(len(wave_names)):             

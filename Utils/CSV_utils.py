@@ -14,8 +14,8 @@ def read_csv_file(csv_path):
     data = pd.read_csv(open(csv_path), sep=r",|\t")
     wave_names = data.wave_name       
     asr_truth = data.labels   
-    # wave_times = data.wave_times
-    # return wave_names, asr_truth, wave_times
+#    wave_names = data.Wave_path       
+#    asr_truth = data.Labels
     return wave_names, asr_truth
 
 def read_lm_csv_file(csv_path):
@@ -80,7 +80,20 @@ def delete_blank(label_list):
         re.sub("\n|\t","",x)
         re.sub(' ',"",x)
     return label_list
-    
+
+
+def remove_punctuation(asr_truth):
+    """
+    去除 csv 資料(asr_truth)中的標點符號.
+    """
+    puncs = re.compile(r'[^a-zA-Z0-9\u4e00-\u9fa5]') 
+    new_labels = []
+    for text in asr_truth:
+        text = puncs.sub("",text)
+        if "。" in text:
+            text = re.sub("。","",text)
+        new_labels.append(text)
+    return new_labels     
 # =============================================================================
 #  Main Code
 # =============================================================================

@@ -52,7 +52,7 @@ class SpeakerSpeechPredict():
         self.convert_word = config['asr_inference'].get('DEVICE') 
 
         self.speaker_url = config['asr_inference'].get('SPEAKER_URL') 
-        self.sample_rate = config['asr_inference'].get('SAMPLE_RATE') 
+        self.sample_rate = config['asr_inference'].getint('SAMPLE_RATE') 
 
     def data_predict(self):
 
@@ -66,6 +66,13 @@ class SpeakerSpeechPredict():
 
         speaker_wer_avg, speaker_wer_list, self.speaker_result, self.speaker_truth, self.speaker_recognition_time = self.Speaker_Predict(self.wav_folder)
         
+        if self.eng_idx != []:
+            for e_idx in self.eng_idx:
+                asr_wer_list.pop(e_idx)
+            asr_wer_avg = np.sum(asr_wer_list)/len(asr_wer_list)
+
+
+
         return asr_wer_avg, speaker_wer_avg
         
 
@@ -81,7 +88,7 @@ class SpeakerSpeechPredict():
         for i in range(len(self.asr_truth)):
             kwargs = {'start_time':  self.wav_start[i], 'end_time':  self.wav_end[i], 
                     'MASR_results': self.speaker_result[i] + ":" + self.asr_result[i], 
-                    'google_asr_results': self.speaker_truth[i] + ":" + self.google_result[i],
+                    'google_asr_results': self.google_result[i],
                     'labels': self.speaker_truth[i] + ":" + self.asr_truth[i],
                     'asr_recognition_time': self.asr_recognition_time[i],
                     'google_recognition_time': self.google_recognition_time[i],
@@ -94,15 +101,31 @@ class SpeakerSpeechPredict():
 
     def load_csv_data(self, input_csv):
         # Open the CSV file for reading
-        csv_data = pd.read_csv(open(input_csv), sep=r",|\t")
+        csv_data = pd.read_csv(open(input_csv)) # , sep=r",|\t"
 
-#        csv_data = csv_data.iloc[0:10]
+        # csv_data = csv_data.iloc[0:2]
 
         self.wave_names = csv_data.Wave_path       
-        self.asr_truth = csv_data.Labels   
         self.wav_start = csv_data.Time_start
         self.wav_end = csv_data.Time_end
         self.speaker_truth = csv_data.Speaker_name
+
+        language_data = csv_data.Other_Lang
+        asr_truth = csv_data.Labels   
+
+       # Remove punctuation
+        self.asr_truth = self.remove_punctuation(asr_truth)
+       # Get english index
+        self.eng_idx = []
+        self.taiwane_idx = []
+        for i,lang in  enumerate(language_data):
+            if lang == "English":
+                self.eng_idx.append(i)
+            elif lang == "Taiwanese":
+                self.taiwane_idx.append(i)
+            else:
+                pass
+
         return csv_data
 
 
@@ -184,7 +207,18 @@ class SpeakerSpeechPredict():
         speaker_wer_avg, speaker_wer_list, speaker_result, speaker_list, speaker_recognition_time = speaker_infer.Speaker_Eval(self.sample_rate, wav_list, self.speaker_truth)
  
         return speaker_wer_avg, speaker_wer_list, speaker_result, speaker_list, speaker_recognition_time
-
+    
+    @staticmethod        
+    def remove_punctuation(asr_truth):
+        """
+        去除 csv 資料(asr_truth)中的標點符號.
+        """
+        puncs = re.compile(r'[^a-zA-Z0-9\u4e00-\u9fa5]') 
+        new_labels = []
+        for text in asr_truth:
+            text = puncs.sub("",text)
+            new_labels.append(text)
+        return new_labels  
 # =============================================================================
 #  Main Code
 # =============================================================================

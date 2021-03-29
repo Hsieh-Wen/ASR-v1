@@ -24,6 +24,17 @@ def read_config(path):
     conf.read(candidates)
     return conf
 
+def list2bool(data_list):
+    bool_list = []
+    for item in data_list:
+        if item == "True":
+            bool_list.append(True)
+        elif item == "False":
+            bool_list.append(False)
+        else:
+            print("Please input True/False.")
+    return bool_list
+
 
 class InferenceBertLm():
     def __init__(self, ASR_csv_name, lm_path, device):
@@ -90,13 +101,20 @@ class InferenceBertLm():
             # use muti method or not
             if self.muti_method:
                 correct_sent, err = self.muti_method_predict(self.asr_pred[i])
+                print(f"Muti_method !!!!!!!!!!!!!!!!")
                 
             else:
+                print(f"{self.asr_pred[i]=}")
+                if type(self.asr_pred[i]) != str:
+                    self.asr_pred[i] = "None"
+                    print(f"No ASR Predice !!! {type(self.asr_pred[i])=}")
                 correct_sent, err = self.LM_model.bert_correct(self.asr_pred[i], 
                                                                    wwm=self.wwm, 
                                                                    reverse=self.reverse, 
                                                                    token_replace=self.token_replace, 
                                                                    use_confusion_word=self.use_confusion_word)
+                # print(f" bert_correct !!!!!!!!!!!!!!!!")
+
 #            print(correct_sent)
             LM_correct.append(correct_sent)
             LM_err.append(err)   
@@ -230,22 +248,28 @@ if __name__ == "__main__":
     use_confusion_words = config['Stage1_lm_inference'].get('use_confusion_words')
     use_confusion_words = re.sub(" ","",use_confusion_words)
     use_confusion_words = re.sub("\n","",use_confusion_words)
-    use_confusion_words_list = use_confusion_words.split("|")  
+    use_confusion_words_list = use_confusion_words.split("|")
+    use_confusion_words_list = list2bool(use_confusion_words_list)  
     
     wwms = config['Stage1_lm_inference'].get('wwms')
     wwms = re.sub(" ","",wwms)
     wwms = re.sub("\n","",wwms)
-    wwms_list = wwms.split("|")     
+    wwms_list = wwms.split("|")
+    wwms_list = list2bool(wwms_list)  
+     
     
     reverses = config['Stage1_lm_inference'].get('reverses')
     reverses = re.sub(" ","",reverses)
     reverses = re.sub("\n","",reverses)
-    reverses_list = reverses.split("|")   
+    reverses_list = reverses.split("|")
+    reverses_list = list2bool(reverses_list)  
+     
     
     token_replaces = config['Stage1_lm_inference'].get('token_replaces')
     token_replaces = re.sub(" ","",token_replaces)
     token_replaces = re.sub("\n","",token_replaces)
     token_replaces_list = token_replaces.split("|")      
+    token_replaces_list = list2bool(token_replaces_list)  
 
 
     
@@ -258,7 +282,7 @@ if __name__ == "__main__":
         for lm_path in lm_paths_list:
             inference_bert_lm = InferenceBertLm(csv_name, lm_path, device=device)
             
-            for use_confusion_word in use_confusion_words_list[1:]:
+            for use_confusion_word in use_confusion_words_list:
                 for wwm in wwms_list:
                     for reverse in reverses_list:
                         for token_replace in token_replaces_list:

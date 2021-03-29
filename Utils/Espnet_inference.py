@@ -7,10 +7,11 @@ Created on Thu Mar  4 16:26:10 2021
 """
 
 import soundfile
+import librosa
 from opencc import OpenCC
 from espnet2.bin.asr_inference import Speech2Text
 
-from CSV_utils import read_csv_file, delete_blank
+from CSV_utils import read_csv_file, delete_blank, remove_punctuation
 from wer_eval import eval_asr
 
 class EspnetInference():
@@ -61,6 +62,9 @@ class EspnetInference():
 
     def espnet_predict(self, wav, convert_word):
         audio, rate = soundfile.read(wav)
+        if rate != 16000:
+            print(f"{audio.shape=}")
+            audio = librosa.resample(audio[:,0], rate, 16000)
         nbests = self.espnet_model(audio)
         asr_predict, *_ = nbests[0]
         # print(asr_predict)
@@ -77,7 +81,8 @@ class EspnetInference():
     def espnet_recognition(self, wav_folder, inference_file, convert_word):
         # load csv data 
         wave_names, asr_truth = read_csv_file(inference_file)     
-        asr_truth = delete_blank(asr_truth)                 
+        asr_truth = delete_blank(asr_truth)
+        asr_truth = remove_punctuation(asr_truth)                 
         # espnet predict        
         asr_predict_result = []        
         for i in range(len(wave_names)):

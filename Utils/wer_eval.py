@@ -9,7 +9,6 @@ Created on Fri Mar  5 08:50:51 2021
 import numpy as np
 import Levenshtein as Lev
 
-
 def eval_asr(asr_truth,asr_predict_result):
     wer_list = []
     for i in range(len(asr_truth)):

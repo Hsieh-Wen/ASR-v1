@@ -17,13 +17,14 @@ class SpeakerInference():
         self.url = url
 
     def speaker_predict(self, wav_name, sample_rate):
-#        wav, sr = librosa.load(wav_name, sr=sample_rate)
-#        text = {"speaker":wav.tolist()}
-#        a = requests.post(self.url,json=text)
-#        speaker = json.loads(a.text)["name"]    
-        speaker = "None"
+        print(wav_name)
+        wav, sr = librosa.load(wav_name, sr=sample_rate)
+        text = {"speaker":wav.tolist()}
+        a = requests.post(self.url + "speaker" ,json=text)
+        
+        speaker = json.loads(a.text)["name"]    
+        # speaker = "None"
         return speaker
-
  
     def Speaker_Eval(self, sample_rate, wav_list, speaker_truth_list):
         speaker_result = []

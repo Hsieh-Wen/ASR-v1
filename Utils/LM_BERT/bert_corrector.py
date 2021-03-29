@@ -238,11 +238,13 @@ class BertCorrector(Corrector):
             
         # 是否使用wwm
         if self.wwm:
+            # print(f"{self.wwm=}")
             # 利用chkip做斷詞
             # str -> list 
             word_sentence_list = self.ws([blk], recommend_dictionary=self.dictionary)[0]
 #                print(word_sentence_list)
         else:
+            # print(f"No wwm !!!!!!!")
             word_sentence_list = list(str(blk))            
             
         _, details = self.predict_fc(word_sentence_list, details)
@@ -276,6 +278,8 @@ class BertCorrector(Corrector):
         sentence_lst = word_sentence_list.copy()
         # reverse
         if self.reverse:
+            # print(f"{self.reverse=}")
+
             idxs = list(range(len(word_sentence_list)))
             for idx, s in zip(idxs[::-1], word_sentence_list[::-1]):
                 
@@ -285,14 +289,19 @@ class BertCorrector(Corrector):
                 
                 # 是否將bert predict word replace on sentence
                 if self.token_replace:
+                    # print(f"{self.token_replace=}")
+
                     sentence_lst[idx] = predict_s
                 else:
+                    # print(f"No token_replace !!!!!!!")
                     sentence_lst[idx] = s
                 
             return blk_new[::-1], details
         
         
         else:
+            # print(f"No reverse !!!!!!!")
+
             for idx, s in enumerate(word_sentence_list):
                 
                 predict_s, details = self.predict_sentence_mask(sentence_lst, s, details, idx)
@@ -356,6 +365,7 @@ class BertCorrector(Corrector):
             if top_tokens and (ss not in top_tokens[i]):
                 # 是否使用相近詞
                 if self.use_confusion_word:
+                    # print(f"{self.use_confusion_word=}")
                     # 取得所有可能正确的词
                     candidates = self.generate_items(s)
                     if candidates:
@@ -364,6 +374,7 @@ class BertCorrector(Corrector):
                         s = s[:i] + token_str + s[i+1:]
                 
                 else:
+                    # print(f"No use_confusion_word !!!!!!!")
                     token_str = top_tokens[i][0]
                     details.append([ss, token_str, index + i, index + i + 1])
                     s = s[:i] + token_str + s[i+1:]
