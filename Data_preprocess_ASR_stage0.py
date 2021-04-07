@@ -49,16 +49,16 @@ class AsrCsvDataPreporcessing():
                 os.makedirs(self.wav_folder_new)
 
         split_ratios = config['Stage0'].get('SPLIT_RATIO')
-        vocab_to_splits = config['Stage0'].get('VOCAB_TO_SPLIT') 
+        split_modes = config['Stage0'].get('SPLIT_MODE') 
         data_expands = config['Stage0'].get('DATA_EXPAND_value') 
 
         if os.path.exists(save_folder_name + "Stage0/ASR/"):
             sys.exit("資料夾已存在！！請修改 config_data_process.ini 之 [SAVE_FOLDER_NAME]") 
     
         # init params
-        self._init_params(save_folder_name, input_csvs, data_folder, split_ratios, vocab_to_splits, data_expands)
+        self._init_params(save_folder_name, input_csvs, data_folder, split_ratios, split_modes, data_expands)
         
-    def _init_params(self, save_folder_name, input_csvs, data_folder, split_ratios, vocab_to_splits, data_expands):
+    def _init_params(self, save_folder_name, input_csvs, data_folder, split_ratios, split_modes, data_expands):
         """
         config data(str to list).
         """
@@ -69,27 +69,45 @@ class AsrCsvDataPreporcessing():
         # parameters of input path
         input_csvs = re.sub(" ","",input_csvs)
         input_csvs = re.sub("\n","",input_csvs)
-        self.csv_name_list = input_csvs.split("|")     
+        self.csv_name_list = input_csvs.split("|") 
+        if "|" in input_csvs:
+            self.csv_name_list = input_csvs.split("|")     
+        else:
+            self.csv_name_list = []
+            self.csv_name_list.append(input_csvs)
         
         csv_num = len(self.csv_name_list)
+        print(csv_num)
         self.csv_folder = data_folder + "csvs/"
         self.wav_folder = data_folder + "waves/" 
     
         # parameters of split csv data
         split_ratios = re.sub(" ","",split_ratios)
         split_ratios = re.sub("\n","",split_ratios)
-        self.split_ratio_list = split_ratios.split("|")
+        if "|" in split_ratios:
+            self.split_ratio_list = split_ratios.split("|")     
+        else:
+            self.split_ratio_list = []
+            self.split_ratio_list.append(split_ratios)
         assert csv_num == len(self.split_ratio_list),"split_ratio_list 數量不對！！請修改 config_data_process.ini 之 [SPLIT_RATIO]"
     
-        vocab_to_splits = re.sub(" ","",vocab_to_splits)
-        vocab_to_splits = re.sub("\n","",vocab_to_splits)
-        self.if_vocab_list = vocab_to_splits.split("|")
-        assert csv_num == len(self.if_vocab_list),"vocab_to_splits 數量不對！！請修改 config_data_process.ini 之 [VOCAB_TO_SPLIT]"
+        split_modes = re.sub(" ","",split_modes)
+        split_modes = re.sub("\n","",split_modes)
+        if "|" in split_modes:
+            self.split_mode_list = split_modes.split("|")     
+        else:
+            self.split_mode_list = []
+            self.split_mode_list.append(split_modes)
+        assert csv_num == len(self.split_mode_list),"split_modes 數量不對！！請修改 config_data_process.ini 之 [SPLIT_MODE]"
                 
         # parameters of if expand data (default=10)
         data_expands = re.sub(" ","",data_expands)
         data_expands = re.sub("\n","",data_expands)
-        self.expand_value_list = data_expands.split("|")
+        if "|" in data_expands:
+            self.expand_value_list = data_expands.split("|")     
+        else:
+            self.expand_value_list = []
+            self.expand_value_list.append(data_expands)       
         assert csv_num == len(self.expand_value_list),"data_expands 數量不對！！請修改 config_data_process.ini 之 [DATA_EXPAND]"
     
     def _init_csv_cropus(self, csv_name):
@@ -159,7 +177,7 @@ class AsrCsvDataPreporcessing():
             self.wave_names = wave_pathes
 
 
-    def data_process(self, csv_name, split_ratio, vocab_to_split, expand_value):
+    def data_process(self, csv_name, split_ratio, split_mode, expand_value):
         """
         Data Process.
             * Include:
@@ -170,7 +188,7 @@ class AsrCsvDataPreporcessing():
             * Input: 
                 - csv_name
                 - split_ratio
-                - vocab_to_split
+                - split_mode
                 - expand_value
             * Output:
                 dict() of config vars.
@@ -183,7 +201,7 @@ class AsrCsvDataPreporcessing():
         self.csv_data_preprocess(wave_names, asr_truth)
         
         # Split csv data
-        train_data, valid_data = self.get_training_and_testing_sets(split_ratio, vocab_to_split, self.seed)
+        train_data, valid_data = self.get_training_and_testing_sets(split_ratio, split_mode, self.seed)
 
         # Save train/valid list to csv.
         self.save_train_valid_to_csvs(expand_value, train_data, valid_data, self.save_data_folder)
@@ -194,7 +212,7 @@ class AsrCsvDataPreporcessing():
                 'wave_duration_threshold' : self.duration_threshold,
                 'wave_sample_rate' : self.sample_rate,
                 'split_ratio': split_ratio,
-                'vocab_to_split': vocab_to_split,
+                'split_mode': split_mode,
                 'seed':self.seed, 'expand_value':expand_value,
                 }       
         
@@ -207,12 +225,12 @@ class AsrCsvDataPreporcessing():
             print(f"\n--------------DATA PREPROCESSING--{csv_name}----------------")
     
             split_ratio = float(self.split_ratio_list[i])
-            vocab_to_split = self.if_vocab_list[i]
+            split_mode = self.split_mode_list[i]
             expand_value = float(self.expand_value_list[i])
             
             self.corpus_num = i
             # save setting data of data preprocessing
-            data_parameter_dict['Corpus_' + str(i)] = self.data_process(csv_name, split_ratio, vocab_to_split, expand_value)
+            data_parameter_dict['Corpus_' + str(i)] = self.data_process(csv_name, split_ratio, split_mode, expand_value)
             
         # 合併 train/valid corpus 內所有 csv 為 train.csv / valid.csv
         self.combine_train_valid_corpus(self.save_data_folder + "ASR/", self.save_data_folder + "ASR/")        
@@ -231,27 +249,28 @@ class AsrCsvDataPreporcessing():
         print(f"save data_processing_paramete.json in path: {path}")
 
 
-    def get_training_and_testing_sets(self, split_ratio, vocab_to_split=False, seed=3):
+    def get_training_and_testing_sets(self, split_ratio, split_mode, seed=3):
         """
         將 csv file 分割成 train list 與 valid list，
         * Input :
             - split_ratio: 分割比例(default: train:valid = 8:2)
-            - vocab_to_split: 選擇分割方法
+            - split_mode: 選擇分割方法
             - seed: 隨機排序的種子數
         
                 兩種分割方法:
-                    * vocab_to_split = True
+                    * split_mode = Vocab
                         根據字頻(每個字在資料集內出現的頻率)，
                         字頻較多之句子，並以 split_ratio 的比例作為 validation data.
-                    * vocab_to_split = False
+                    * split_mode = Random
                         將資料集做隨機排序，
                         再以 split_ratio 的比例分割 train 和 validation data.  
         * Output :
             training_list: 分割好的 train list ; 若split_ratio=0.0, 則 train list ＝ [].
             validation_list:  分割好的 valid list ; 若split_ratio=1.0, 則 valid list ＝ [].       
         """
-         
-        if vocab_to_split == True:
+
+
+        if split_mode == "Vocab":
             
             vocabulary, sorted_vob, vocab_json_path = bulid_vocab(self.data_path, _ , save_file = False)
             
@@ -266,8 +285,8 @@ class AsrCsvDataPreporcessing():
             file_o_list = []
             for item in vocab_sorted_list:
                 file_o_list.append(item[0:3])
-        
-        else:
+
+        elif split_mode == "Random":
             file_list = list(zip(self.wave_names, self.asr_truth,self.wave_times))    
             random.seed(seed)
             random.shuffle(file_list)
@@ -279,7 +298,11 @@ class AsrCsvDataPreporcessing():
                 labels.append(t_data[1])
                 wav_times.append(t_data[2])
             file_o_list = list(zip(wave_path,labels,wav_times))
-            
+        elif split_mode == "Sequence":
+            file_o_list = list(zip(self.wave_names, self.asr_truth,self.wave_times)) 
+        else:
+            sys.exit("No this split_mode !!!!!")
+
         split_index = floor(len(file_o_list) * split_ratio)
         training_list = file_o_list[:split_index]
         validation_list = file_o_list[split_index:]
