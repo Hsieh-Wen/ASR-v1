@@ -8,14 +8,15 @@ Created on Fri Jan 22 13:40:07 2021
 import glob
 import pandas as pd
 import re
+import numpy as np
 
 def read_csv_file(csv_path):
     # Open the CSV file for reading
     data = pd.read_csv(open(csv_path), sep=r",|\t")
-    wave_names = data.wave_name       
-    asr_truth = data.labels   
-#    wave_names = data.Wave_path       
-#    asr_truth = data.Labels
+    # wave_names = data.wave_name       
+    # asr_truth = data.labels   
+    wave_names = data.Wave_path       
+    asr_truth = data.Labels
     return wave_names, asr_truth
 
 def read_lm_csv_file(csv_path):
@@ -68,7 +69,15 @@ def csv_data_expand(expand_value, csv_path):
 
 def combine_csv_files(input_csv_folder, data_mode, output_folder):
     filenames = sorted(glob.glob(input_csv_folder + data_mode + "/" + "*.csv"))
-    combined_csv = pd.concat( [ pd.read_csv(f) for f in filenames ] )   
+    print(filenames)
+    if len(filenames) > 1 :
+        combined_csv = pd.concat( [ pd.read_csv(f) for f in filenames ] )   
+    elif len(filenames) == 1:
+        combined_csv = pd.read_csv(filenames[0])
+        print("Only one csv to combine !!")
+    else:
+        print("No csv to combine !!")
+        combined_csv = pd.DataFrame(0, index=np.arange(10), columns=['wave_name','labels','wave_times'])
     combined_csv_name = output_folder + "combined_" + data_mode + ".csv"
     combined_csv.to_csv(combined_csv_name, index=False )
     print(f"{combined_csv_name} = 合併{data_mode}資料夾內的csv檔案")
