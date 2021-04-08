@@ -11,6 +11,7 @@ Created on Tue Jan 19 09:53:48 2021
 import re
 import os
 import configparser
+import numpy as np
 
 import sys
 sys.path.append("./Utils")
@@ -153,11 +154,25 @@ class InferenceASRmodels():
                 # Load ASR Model 
                 self.ASR_model = self.Load_Model(model_path, self.device)
                 ASR_wer_avg, asr_truth, asr_predict_result, wer_list = self.inference_data(self.wav_folder, infer_file, self.convert_word)
-    
+
                 kwargs = {'Inference_Mode':'ASR', 'Input_File': infer_file, 'Model_Path': model_path,
                           'ASR_wer_avg': ASR_wer_avg,
                           'Ground_Truth': asr_truth, 'Predict_Result': asr_predict_result, 'Wer_list': wer_list,
                           'Py_file_name': os.path.basename(sys.argv[0])}
+
+                if "/" in infer_file:
+                    infer_file_name = infer_file.split("/")[-1]
+                    infer_folder = "/".join(infer_file.split("/")[0:-1])
+                else:
+                    infer_file_name = infer_file
+                    infer_folder = "./"
+                npz_name = re.sub(".csv",".npz",infer_file_name)
+                npz_path = infer_folder + "/" + npz_name
+
+                if os.path.isfile(infer_folder + "/" + npz_name):
+                    print("Load orgiginal npz data !!")
+                    npz_data = np.load(npz_path, allow_pickle=True)
+                    kwargs.update(npz_data)
                 save_result.save_follow(**kwargs)  
                 print(f"ASR_Model-{asr_mode}, Model_name-{model_path}, 檔名:{infer_file}, 平均wer= {ASR_wer_avg}")          
                 

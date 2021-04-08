@@ -9,7 +9,7 @@ Created on Mon Feb  8 15:13:09 2021
 
 
 import configparser
-from  Utils.CSV_utils import read_inference_csv_file, read_csv_file
+from  Utils.CSV_utils import read_inference_csv_file, read_mycsv_file
 
 import Levenshtein as Lev
 import numpy as np
@@ -62,7 +62,7 @@ class HtmlResult():
 
     def load_data_html_flow(self):
     	# load ground truth
-        _, ground_truth = list(read_csv_file(self.compare_data_path_list[0]))
+        _, ground_truth,_ = list(read_mycsv_file(self.compare_data_path_list[0]))
      	
      	# load json data
         with open(self.json_path, 'r') as f:

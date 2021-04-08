@@ -5,7 +5,7 @@ Created on Fri Feb  5 10:36:11 2021
 
 @author: c95hcw
 """
-from Utils.CSV_utils import read_csv_file, combine_csv_files
+from Utils.CSV_utils import read_csv_file, combine_csv_files, save_dataframe_to_npz
 from Utils.Bulid_Vocabulary import bulid_vocab
 
 import configparser
@@ -69,7 +69,6 @@ class AsrCsvDataPreporcessing():
         # parameters of input path
         input_csvs = re.sub(" ","",input_csvs)
         input_csvs = re.sub("\n","",input_csvs)
-        self.csv_name_list = input_csvs.split("|") 
         if "|" in input_csvs:
             self.csv_name_list = input_csvs.split("|")     
         else:
@@ -122,6 +121,21 @@ class AsrCsvDataPreporcessing():
         self.csv_name = csv_name
         self.data_path = self.csv_folder + csv_name
         wave_names, asr_truth = read_csv_file(self.csv_folder + csv_name)
+
+        # save original csv data
+        save_npz_folder = self.save_data_folder + "ASR/org_csvdata/"
+        if not os.path.exists(save_npz_folder):
+            os.makedirs(save_npz_folder)
+
+        if "/" in csv_name:
+            c_name = csv_name.split("/")[-1]
+        else:
+            c_name = csv_name
+        npz_name = re.sub(".csv",".npz",c_name)
+        
+        save_npz_path = save_npz_folder + npz_name
+        save_dataframe_to_npz(self.csv_folder + csv_name, save_npz_path)
+
         return wave_names, asr_truth
 
     def csv_data_preprocess(self, wave_names, asr_truth):

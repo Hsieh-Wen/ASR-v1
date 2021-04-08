@@ -8,7 +8,7 @@ Created on Thu Mar  4 16:29:00 2021
 
 import speech_recognition as sr
 
-from CSV_utils import read_csv_file, delete_blank
+from CSV_utils import read_mycsv_file, delete_blank
 from wer_eval import eval_asr
 
 class GoogleInference():
@@ -34,7 +34,7 @@ class GoogleInference():
     
     def google_recognition(self, wav_folder, inference_file):
         # load csv data 
-        wave_names, asr_truth = read_csv_file(inference_file)     
+        wave_names, asr_truth, _ = read_mycsv_file(inference_file)     
         asr_truth = delete_blank(asr_truth)        
         # google predict        
         asr_predict_result = []        

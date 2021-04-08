@@ -42,7 +42,17 @@ def read_inference_csv_file(csv_path):
     wer_list = data.WER
     return asr_truth, predict_list, wer_list
 
+def save_dataframe_to_npz(csv_path, save_npz_path):
+    """[save original csv data to npz]
 
+    Args:
+        csv_path ([str]): input csv path.
+        save_npz_path ([str]): output npz path.
+    """
+    dataframe = pd.read_csv(open(csv_path), sep=r",|\t")
+    dict_data = dataframe.to_dict('list')
+    np.savez(save_npz_path, **dict_data)
+    print(f"Already save npz file. {save_npz_path}")
 
 def save_csv_file(save_path, wave_path,labels,wav_time):
     csv_datalist = list(zip(wave_path,labels,wav_time))     

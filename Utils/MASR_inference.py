@@ -8,7 +8,7 @@ Created on Thu Mar  4 16:23:32 2021
 import sys
 sys.path.append("./masr_util")
 from models.conv import GatedConv
-from CSV_utils import read_csv_file, delete_blank, remove_punctuation
+from CSV_utils import read_mycsv_file, delete_blank, remove_punctuation
 from opencc import OpenCC
 from wer_eval import eval_asr
 
@@ -36,7 +36,7 @@ class MasrInference():
     
     def masr_recognition(self, wav_folder, inference_file, convert_word):
         # load csv data 
-        wave_names, asr_truth = read_csv_file(inference_file)  
+        wave_names, asr_truth, _ = read_mycsv_file(inference_file)  
         asr_truth = delete_blank(asr_truth)
         asr_truth = remove_punctuation(asr_truth)
         

@@ -16,7 +16,7 @@ sys.path.append("./Utils")
 from MASR_data_preprocess import MasrDataPreprocess
 from Quartznet_data_preprocess import QuartznetDataPreprocess
 from Espnet_data_preprocess import EspnetDataProcess
-from BERT_data_preprocess import BertDataPreprocess
+from ASR_inference_data_preprocess import ASRIDataProcess
 
 def read_config(path):
     conf = configparser.ConfigParser()
@@ -29,7 +29,7 @@ class ASRDatasetPreprocess():
         self.data_folder = data_folder
         stage0_folder = data_folder + "Stage0/"   
         self.save_data_folder = data_folder + "Stage1/" 
-
+        # print(stage0_folder)
         if not os.path.exists(stage0_folder + "ASR/"):
             sys.exit("Please run Data_preprocess_ASR_stage0.py")
         self.asr_train_data_path = stage0_folder + "ASR/combined_train_corpus.csv"
@@ -71,6 +71,11 @@ class ASRDatasetPreprocess():
             print("Prepare dataset for Espnet model !") 
             espnet_data_process = EspnetDataProcess(self.data_folder)
             espnet_data_process.espnet_dataset()
+
+        elif train_mode == "ASR_Inference_mode":
+            print("Prepare dataset for ASR inference !") 
+            inference_data_process = ASRIDataProcess()
+            inference_data_process.asr_inference_dataset(self.asr_train_data_path, self.save_data_folder)            
 
         else:
             print(f"沒有此 train_mode: {train_mode} ！！")

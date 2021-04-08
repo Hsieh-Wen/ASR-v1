@@ -82,14 +82,19 @@ class SaveResult():
         else:
             sys.exit("Please input data of Wer_list")
 
-        # Some Key no need to write in json      
-        del parameters_dict['Ground_Truth']
-        del parameters_dict['Predict_Result']
-        del parameters_dict['Wer_list']
-        
-        
-        if 'Error_word' in parameters_dict.keys():
-            del parameters_dict['Error_word']
+        # Some Key no need to write in json 
+        parameters_dict2 = parameters_dict.copy()
+        for key in parameters_dict2.keys():
+            if np.size(parameters_dict2[key]) > 1:
+                del parameters_dict[key]
+                print(f"No save key:{key} in json file.")
+
+        # del parameters_dict['Ground_Truth']
+        # del parameters_dict['Predict_Result']
+        # del parameters_dict['Wer_list']
+        # if 'Error_word' in parameters_dict.keys():
+        #     del parameters_dict['Error_word']
+
 
         # Setting of json/csv file path           
         save_json_path = self.save_folder + "result.json" 
