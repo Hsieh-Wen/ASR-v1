@@ -83,18 +83,13 @@ class SaveResult():
             sys.exit("Please input data of Wer_list")
 
         # Some Key no need to write in json 
+        # Only type(int, float, str, bool) can save in json file.
         parameters_dict2 = parameters_dict.copy()
-        for key in parameters_dict2.keys():
-            if np.size(parameters_dict2[key]) > 1:
+        save_json_type = {int, float, str, bool}
+        for key,value in parameters_dict2.items():
+            if type(value) not in save_json_type:
                 del parameters_dict[key]
-                print(f"No save key:{key} in json file.")
-
-        # del parameters_dict['Ground_Truth']
-        # del parameters_dict['Predict_Result']
-        # del parameters_dict['Wer_list']
-        # if 'Error_word' in parameters_dict.keys():
-        #     del parameters_dict['Error_word']
-
+                print(f"No save key [{key}] in json file, {type(value)}")
 
         # Setting of json/csv file path           
         save_json_path = self.save_folder + "result.json" 
@@ -252,7 +247,8 @@ if __name__ == "__main__":
     config = read_config(path)
     
     # parameters of save parameter    
-    save_path = config['Stage0_asr_inference'].get('SAVE_PATH') 
+    # save_path = config['Stage0_asr_inference'].get('SAVE_PATH') 
+    save_path = "/home/c95hcw/ASR_Data/Inference_Result/ttt/"
     asr_model_path = "Google_ASR"
    
     asr_mode = "Google"    

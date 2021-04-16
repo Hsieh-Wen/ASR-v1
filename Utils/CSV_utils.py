@@ -118,29 +118,29 @@ def remove_punctuation(asr_truth):
 # =============================================================================
 if __name__ == "__main__":
     
-    csv_path = "/home/c95hcw/ASR/Dataset/raw_data/csvs/speech_Training_dataset.csv"
-    wave_names, asr_truth = read_csv_file(csv_path)
+#    csv_path = "/home/c95hcw/ASR/Dataset/raw_data/csvs/speech_Training_dataset.csv"
+#    wave_names, asr_truth = read_csv_file(csv_path)
 
 
 
-#     data_expand = False
-#     data_combined = True
+     data_expand = False
+     data_combined = True
     
-#     if data_expand:
-#         # Example of data expand    
-#         csv_path = "/home/c95hcw/ASR/Dataset/raw_data/csvs/speech_Training_dataset.csv"
-#         expand_value = 10
-#         csv_data_expand(expand_value, csv_path)
+     if data_expand:
+         # Example of data expand    
+         csv_path = "/home/c95hcw/ASR/Dataset/raw_data/csvs/speech_Training_dataset.csv"
+         expand_value = 10
+         csv_data_expand(expand_value, csv_path)
     
-#     if data_combined:
-#         # Example of data combination
-#         csv_folder = "/home/c95hcw/ASR/Dataset/data/prepare_data/"
+     if data_combined:
+         # Example of data combination
+         csv_folder = "/home/c95hcw/ASR_Data/Dataset/speech_tw_demo_202104/11004_demo_6_video/"
         
-#         data_mode1 = "train"
-#         combine_csv_files(csv_folder, data_mode1)
+         data_mode1 = "train"
+         combine_csv_files(csv_folder, data_mode1)
         
-#         data_mode2 = "valid"
-#         combine_csv_files(csv_folder, data_mode2)    
+         data_mode2 = "valid"
+         combine_csv_files(csv_folder, data_mode2)    
     
-# #    csv_folder = "/home/c95hcw/ASR/Dataset/data/prepare_data/"
-# #    combine_csv_files(csv_folder, "train")    
+ #    csv_folder = "/home/c95hcw/ASR/Dataset/data/prepare_data/"
+ #    combine_csv_files(csv_folder, "train")    

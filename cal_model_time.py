@@ -27,7 +27,7 @@ sys.path.append("./Utils/quartznet_util")
 
 sys.path.append("../")
 from Save_Inference_Result import SaveResult
-from CSV_utils import read_csv_file, delete_blank, remove_punctuation
+from CSV_utils import read_mycsv_file, delete_blank, remove_punctuation
 from wer_eval import eval_asr
 
 from MASR_inference import MasrInference
@@ -137,7 +137,7 @@ class InferenceASRmodelsTime():
         	- asr_predict_result: (list) 每個音檔的語音辨識結果
         	- wer_list: 每個音檔的語音辨識錯誤率
         """
-        wave_names, asr_truth = read_csv_file(inference_file)  
+        wave_names, asr_truth, _ = read_mycsv_file(inference_file)  
         asr_truth = delete_blank(asr_truth)
         asr_truth = remove_punctuation(asr_truth)
 

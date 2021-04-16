@@ -9,7 +9,7 @@ Created on Mon Feb  8 15:13:09 2021
 
 
 import configparser
-from  Utils.CSV_utils import read_inference_csv_file, read_csv_file, remove_punctuation
+from  Utils.CSV_utils import read_inference_csv_file, read_mycsv_file, remove_punctuation
 
 import Levenshtein as Lev
 import numpy as np
@@ -63,7 +63,7 @@ class HtmlResult():
 
     def load_data_html_flow(self):
     	# load ground truth
-        _, ground_truth = list(read_csv_file(self.compare_data_path_list[0]))
+        _, ground_truth,_ = list(read_mycsv_file(self.compare_data_path_list[0]))
      	
      	# load json data
         with open(self.json_path, 'r') as f:
@@ -146,30 +146,38 @@ class HtmlResult():
             label_list, predict_list, wer_list = read_inference_csv_file(self.compare_data_path_list[i])
             label_list = remove_punctuation(label_list)
             wer_avg = np.sum(wer_list)/len(wer_list)
-            
-            
-            eng_idx, taiwan_idx = self.load_lang_data(self.compare_data_path_list[0])
+
+            eng_idx, taiwan_idx, self.eng_num, self.taiwan_num, self.chinese_num = self.load_lang_data(self.compare_data_path_list[0])
+
             ch_ti_wer = wer_list.copy()
             if eng_idx != []:
                 for e_idx in eng_idx:
                     ch_ti_wer.pop(e_idx)
-                ch_ti_wer_avg = np.sum(ch_ti_wer)/len(ch_ti_wer)
+                ch_ti_wer_avg = np.sum(ch_ti_wer)/len(ch_ti_wer)              
             else:
-                ch_ti_wer_avg = 0
+                ch_ti_wer_avg = wer_avg               
+
             ch_wer = wer_list.copy()
             if taiwan_idx != []:
                 for t_idx in taiwan_idx:
                     ch_wer.pop(t_idx)
-                ch_wer_avg = np.sum(ch_wer)/len(ch_wer)     
+                ch_wer_avg = np.sum(ch_wer)/len(ch_wer)              
             else:
                 ch_wer_avg = wer_avg
+                
+            
             # wer只顯示小數後兩位
             n_wer_list = []
             for wer in wer_list:
                 n_wer = format(wer,'.2f') 
                 n_wer_list.append(n_wer)
             # 將資料存入字典
-            model_data_dict[self.column_name_list[i]] = {'label_list': list(label_list), 'predict_list': list(predict_list), 'wer_list': n_wer_list,'wer_avg': wer_avg,'Chinese_Taiwan_wer_avg': ch_ti_wer_avg, 'Chinese_wer_avg': ch_wer_avg  }  
+            model_data_dict[self.column_name_list[i]] = {'label_list': list(label_list),
+                                                         'predict_list': list(predict_list), 
+                                                         'wer_list': n_wer_list,
+                                                         'wer_avg': wer_avg,
+                                                         'Chinese_Taiwan_wer_avg': ch_ti_wer_avg, 
+                                                         'Chinese_wer_avg': ch_wer_avg}  
         return model_data_dict
     
     
@@ -191,10 +199,19 @@ class HtmlResult():
     
     def load_lang_data(self, input_csv):
         # Open the CSV file for reading
-        csv_data = pd.read_csv(open(input_csv), sep=r",|\t")
-        language_data = csv_data.Other_Lang
+        input_name = input_csv.split("/")[-1]
+        npz_folder = "/".join(input_csv.split("/")[0:-2])
+        npz_name = re.sub(".csv",".npz",input_name)
+        npz_path = npz_folder + "/Inference_data/" + npz_name # + "/npz_files/"
+        npz_data = np.load(npz_path)
 
-       # Get english index
+        language_data = npz_data['Other_Lang'].tolist()
+
+
+        # csv_data = pd.read_csv(open(input_csv), sep=r",|\t")
+        # language_data = csv_data.Other_Lang
+
+        # Get english index
         eng_idx = []
         taiwan_idx = []
         for i,lang in  enumerate(language_data):
@@ -203,10 +220,22 @@ class HtmlResult():
             if lang == "Taiwanese" or lang == "English":
                 taiwan_idx.append(i)
 
-        return eng_idx, taiwan_idx            
+        if eng_idx != []:
+            eng_num = len(eng_idx)
+        else:
+            eng_num = 0
 
-    @staticmethod
-    def dict_to_html(save_path, ground_truth, compare_model_path_dict, data_dict):      
+        if taiwan_idx != []:
+            taiwan_num = len(taiwan_idx)-len(eng_idx) 
+        else:
+            taiwan_num = 0
+
+        chinese_num = len(language_data) - taiwan_num - eng_num
+
+        return eng_idx, taiwan_idx, eng_num, taiwan_num, chinese_num            
+
+    # @staticmethod
+    def dict_to_html(self, save_path, ground_truth, compare_model_path_dict, data_dict):      
         """
         字典資料以 Html 格式輸出.
         * Input:
@@ -237,8 +266,19 @@ class HtmlResult():
         f_html.write('</tr>')    
     
         f_html.write('<tr>')
-        
+        f_html.write('<br>') # 換行
+        f_html.write('<font size="+2">')
+        # f_html.write('<td>' + " Inference file path: " + self.compare_data_path_list[0] + "\n\n" + '</td>')
+        # f_html.write('</br>')
+        # f_html.write('<br>') 
+        # f_html.write('<font size="+1">')
+        language_data = "[總句數: " + str(len(ground_truth)) + ", 中文句數: " + str(self.chinese_num) + ", 台語句數: " + str(self.taiwan_num) +", 英文句數: " + str(self.eng_num) + "]\n"
+        f_html.write('<td>' + language_data + '</td>')
+        f_html.write('</br>')
+        f_html.write('</font>')
+        f_html.write('</tr>')
 
+        f_html.write('<tr>')
         for i in range(len(compare_model_path_dict)):
             input_csv_name = list(compare_model_path_dict.keys())
             chi_TW_avg_wer = format(data_dict[input_csv_name[i]]['Chinese_Taiwan_wer_avg'],'.2f')
