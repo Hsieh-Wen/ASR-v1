@@ -9,7 +9,7 @@ import re
 from torchtext import data
 import json
 
-def bulid_vocab(csvfile_path, save_vcab_folder, save_file):
+def bulid_vocab(csvfile_path, save_vcab_folder, save_file, csv_column_label="labels"):
     """
     建立csv file 之 字典，
     * Input:
@@ -19,7 +19,9 @@ def bulid_vocab(csvfile_path, save_vcab_folder, save_file):
     """
     # step 1: using csvfile list as Field tokenize function for train dataset
     LABEL = data.Field(sequential=True, tokenize=list)
-    fields = {"labels":('labels',LABEL)}
+    # fields = {"labels":('labels',LABEL)}
+    #fields = {"Labels":('labels',LABEL)}
+    fields = {csv_column_label:('labels',LABEL)}
     train = data.TabularDataset(path=csvfile_path,format='csv',fields=fields)
     # for i in range(0, len(train)):
         # print(vars(train[i]))

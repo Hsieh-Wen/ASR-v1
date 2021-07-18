@@ -10,19 +10,21 @@ import pandas as pd
 import re
 import numpy as np
 
-def read_csv_file(csv_path):
+def read_csv_file(csv_path, csv_column_wav="wave_name", csv_column_label="labels"):
     # Open the CSV file for reading
     data = pd.read_csv(open(csv_path), sep=r",|\t")
-    # wave_names = data.wave_name       
-    # asr_truth = data.labels   
-    wave_names = data.Wave_path       
-    asr_truth = data.Labels
+    #wave_names = data.wave_name       
+    #asr_truth = data.labels   
+    # wave_names = data.Wave_path       
+    # asr_truth = data.Labels
+    wave_names = data[csv_column_wav]       
+    asr_truth = data[csv_column_label]    
     return wave_names, asr_truth
 
-def read_lm_csv_file(csv_path):
+def read_lm_csv_file(csv_path, csv_column_label="labels"):
     # Open the CSV file for reading
-    data = pd.read_csv(open(csv_path))
-    asr_truth = data.labels   
+    data = pd.read_csv(open(csv_path), sep=r",|\t")
+    asr_truth = data[csv_column_label]   
 
     return asr_truth
 
