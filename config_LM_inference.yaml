@@ -1,0 +1,23 @@
+# inital parameter
+DEVICE : gpu
+
+LM_Models:
+  Model1:
+    LM_Mode: BERT 
+    Model_Path: /home/c95hcw/ASR_Data/Models/LM_models/BERT_org/
+    
+# inference parameter 
+INFERENCE_FILEs : 
+  Infer_file1: 
+    csv_file : /home/c95hcw/ASR_Data/Inference_Result/data_ttt/result_id_0006.csv 
+  Infer_file2: 
+    csv_file : /home/c95hcw/ASR_Data/Inference_Result/data_ttt/result_id_0007.csv   
+
+# save parameter  data_tw_v1       
+SAVE_PATH : ../ASR_Data/Inference_Result/data_ttt/
+
+# inference parameter
+use_confusion_words: [True,False]
+wwms: [True,False]
+reverses: [True,False]
+token_replaces: [True,False]

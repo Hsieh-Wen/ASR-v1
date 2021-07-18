@@ -1,0 +1,30 @@
+# inital parameter
+DEVICE : gpu
+CONVERT_WORD : False 
+ASR_Models:
+  Model1: 
+    ASR_Mode: MASR
+    Model_Path: /home/c95hcw/ASR_Data/Models/ASR_models/MASR/MASR_v1.2.2/model_ma.pth
+  Model2: 
+    ASR_Mode: Espnet
+    Model_Path: /home/c95hcw/ASR_Data/Models/ASR_models/Espnet/espnet_v2.2/asr_train_asr_conformer_raw_zh_char_sp/valid.acc.ave_10best.pth && None
+  Model3: 
+    ASR_Mode: Quartznet
+    Model_Path: /home/c95hcw/ASR_Data/Models/ASR_models/Quartznet/quar_model_v1.7.5/QuartzNet-EPOCH-n.pt.nemo
+  Model4: 
+    ASR_Mode: Google
+    Model_Path: Google_asr
+    
+# inference parameter 
+INFERENCE_FILEs : 
+  Infer_file1: 
+    WAV_FOLDER : ../ASR_Data/Dataset/raw_data/waves/
+    csv_file : /home/c95hcw/ASR_Data/Dataset/raw_data/csvs/my_record_time.csv 
+  Infer_file2: 
+    WAV_FOLDER : None
+    csv_file : /home/c95hcw/ASR_Data/Dataset/speech_tw_demo_202104/Stage1/Inference_data/1RPnk.csv   
+
+# save parameter  data_tw_v1       
+SAVE_PATH : ../ASR_Data/Inference_Result/data_ttt/
+
+

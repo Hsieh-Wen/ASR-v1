@@ -7,73 +7,65 @@ Created on Fri Jan 15 10:59:54 2021
 """
 
 import sys
+sys.path.append("./Utils")
 sys.path.append("./Utils/LM_BERT/")
 
-import configparser
+# import configparser
 import bert_corrector
 import os
 import pandas as pd
 import Levenshtein as Lev
 import re
 
+from load_config_args import load_config
+from CSV_utils import read_inference_csv_file
 from Save_Inference_Result import SaveResult
 
-def read_config(path):
-    conf = configparser.ConfigParser()
-    candidates = [path]
-    conf.read(candidates)
-    return conf
+# def read_config(path):
+#     conf = configparser.ConfigParser()
+#     candidates = [path]
+#     conf.read(candidates)
+#     return conf
 
-def list2bool(data_list):
-    bool_list = []
-    for item in data_list:
-        if item == "True":
-            bool_list.append(True)
-        elif item == "False":
-            bool_list.append(False)
-        else:
-            print("Please input True/False.")
-    return bool_list
+# def list2bool(data_list):
+#     bool_list = []
+#     for item in data_list:
+#         if item == "True":
+#             bool_list.append(True)
+#         elif item == "False":
+#             bool_list.append(False)
+#         else:
+#             print("Please input True/False.")
+#     return bool_list
 
 
 class InferenceBertLm():
-    def __init__(self, ASR_csv_name, lm_path, device):
-        
-        self.ASR_csv_name = ASR_csv_name 
-        
-        self.lm_path = lm_path
-        self.LM_model = bert_corrector.BertCorrector(bert_model_dir = self.lm_path, device=device)
+    def __init__(self, config_path): #
+        # Load config
+        self.args = load_config(config_path=config_path)
 
-        
-        # Open the CSV file for reading
-        # load asr predict result to inference mask LM model
-        asr_data = pd.read_csv(open(self.ASR_csv_name))
-        self.asr_truth = asr_data.labels
-        self.asr_pred = asr_data.Predict
-        self.asr_wer = asr_data.WER
-        
-        
-        
-    def print_args(self):
-        print(f"{self.lm_path=}")
-        print(f"{self.use_confusion_word=}")
-        print(f"{self.wwm=}")
-        print(f"{self.reverse=}")
-        print(f"{self.token_replace=}")
-        print(f"{self.muti_method=}")
-        print(f"{self.replace=}")
-        
-    def set_predict_method(self, use_confusion_word, wwm, reverse, token_replace, muti_method, replace):
-        
-        self.use_confusion_word = use_confusion_word
-        self.wwm = wwm
-        self.reverse = reverse
-        self.token_replace = token_replace
-        self.muti_method = muti_method
-        self.replace = replace
-        
-        
-    def inference_test_data(self, use_confusion_word, wwm, reverse, token_replace, muti_method=False, replace="intersection"):
+        # parameters of initial function
+        self.device = self.args.DEVICE
+
+        self.LM_models = self.args.LM_Models
+        self.inference_files =  self.args.INFERENCE_FILEs
+
+        # parameters of save parameter       
+        self.save_path =  self.args.SAVE_PATH
+
+        self.use_confusion_words = self.args.use_confusion_words
+        self.wwms = self.args.wwms
+        self.reverses = self.args.reverses
+        self.token_replaces = self.args.token_replaces
+
+    def Load_LM_Model(self, model_path, device):
+        if self.lm_mode == "BERT":
+            LM_model = bert_corrector.BertCorrector(bert_model_dir = model_path, device=device)
+        else:            
+            print(f"No {self.LM_mode} Exists !!")
+        return LM_model
+
+    def inference_test_data(self,ASR_csv_name, use_confusion_word, wwm, reverse, token_replace, muti_method=False, replace="intersection"):
         """
         use Bert Mask LM to inference ASR predict result
         1. set predict method
@@ -87,9 +79,9 @@ class InferenceBertLm():
         :return: ASR wer & LM correct wer
         """
         self.set_predict_method(use_confusion_word, wwm, reverse, token_replace, muti_method, replace)
-        self.print_args()
+        # self.print_args()
+        self.asr_truth, self.asr_pred, self.asr_wer = read_inference_csv_file(ASR_csv_name)
         
-     
         LM_correct = []
         LM_err = []
         LM_wer = []
@@ -126,13 +118,36 @@ class InferenceBertLm():
         LM_wer_avg = lm_wers/len(LM_wer)
         ASR_wer_avg = asr_wers/len(self.asr_wer)
         
-        self.print_args()
+        # self.print_args()
         print("ASR - 平均 WER = ", ASR_wer_avg)
         print("LM - 平均 WER = ", LM_wer_avg)
         asr_predict =  self.asr_pred
         lm_predict_result = LM_correct
         lm_wer_list = LM_wer
         return LM_wer_avg, ASR_wer_avg, asr_predict, lm_predict_result, lm_wer_list, LM_err
+
+
+        
+    def print_args(self):
+        print(f"{self.lm_path=}")
+        print(f"{self.use_confusion_word=}")
+        print(f"{self.wwm=}")
+        print(f"{self.reverse=}")
+        print(f"{self.token_replace=}")
+        print(f"{self.muti_method=}")
+        print(f"{self.replace=}")
+        
+    def set_predict_method(self, use_confusion_word, wwm, reverse, token_replace, muti_method, replace):
+        
+        self.use_confusion_word = use_confusion_word
+        self.wwm = wwm
+        self.reverse = reverse
+        self.token_replace = token_replace
+        self.muti_method = muti_method
+        self.replace = replace
+        
+        
+    
             
             
     def args2list(self):
@@ -224,78 +239,41 @@ class InferenceBertLm():
                 list1.append(l2)
         return list1
 
+    def LM_inference_flow(self):
+        save_result = SaveResult(self.save_path)
+        file_name =  os.path.basename(sys.argv[0])
+        Model_keys = self.LM_models.keys()
+        inferfile_keys = self.inference_files.keys()
+        for inferfile_id in inferfile_keys:
+            infer_file = self.inference_files[inferfile_id]['csv_file']
+            for model_id in Model_keys:
+                self.lm_mode = self.LM_models[model_id]['LM_Mode']
+                model_path = self.LM_models[model_id]['Model_Path']
+                # Load LM Model 
+                self.LM_model = self.Load_LM_Model(model_path, self.device)
+                for use_confusion_word in self.use_confusion_words:
+                    for wwm in self.wwms:
+                        for reverse in self.reverses:
+                            for token_replace in self.token_replaces:
+                                LM_wer_avg, ASR_wer_avg, asr_predict, lm_predict_result, lm_wer_list, LM_err= self.inference_test_data(infer_file, use_confusion_word, wwm, reverse, token_replace)                            
+                                                        
+                                kwargs_lm = {'Inference_Mode':'LM', 'Input_File': csv_name, 'Model_Path':lm_path, 
+                                            'Ground_Truth':asr_predict, 'Predict_Result':lm_predict_result, 'Wer_list':lm_wer_list, 'Error_word':LM_err, 
+                                            'ASR_wer_avg':ASR_wer_avg,'LM_wer_avg':LM_wer_avg,                 
+                                            'wwm':wwm,'use_confusion_word':use_confusion_word,'reverse':reverse,'token_replace':token_replace,
+                                            'Py_file_name':file_name}    
+                                save_result.save_follow(**kwargs_lm)             
+                            
+                            # del inference_bert_lm
+
 
 
 if __name__ == "__main__":
-    file_name =  os.path.basename(sys.argv[0])
-    path = "config_asr_inference.ini"
-    config = read_config(path)
-# Parameters    
-    # parameters of initial function
-    device = config['Stage1_lm_inference'].get('DEVICE') 
-        
-    ASR_csv_names = config['Stage1_lm_inference'].get('INFERENCE_FILE')   
-    ASR_csv_names = re.sub(" ","",ASR_csv_names)
-    ASR_csv_names = re.sub("\n","",ASR_csv_names)
-    ASR_csv_names_list = ASR_csv_names.split("|")   
-    
-    lm_paths = config['Stage1_lm_inference'].get('MODEL_PATH')
-    lm_paths = re.sub(" ","",lm_paths)
-    lm_paths = re.sub("\n","",lm_paths)
-    lm_paths_list = lm_paths.split("|")  
-    
-    # inference parameter
-    use_confusion_words = config['Stage1_lm_inference'].get('use_confusion_words')
-    use_confusion_words = re.sub(" ","",use_confusion_words)
-    use_confusion_words = re.sub("\n","",use_confusion_words)
-    use_confusion_words_list = use_confusion_words.split("|")
-    use_confusion_words_list = list2bool(use_confusion_words_list)  
-    
-    wwms = config['Stage1_lm_inference'].get('wwms')
-    wwms = re.sub(" ","",wwms)
-    wwms = re.sub("\n","",wwms)
-    wwms_list = wwms.split("|")
-    wwms_list = list2bool(wwms_list)  
-     
-    
-    reverses = config['Stage1_lm_inference'].get('reverses')
-    reverses = re.sub(" ","",reverses)
-    reverses = re.sub("\n","",reverses)
-    reverses_list = reverses.split("|")
-    reverses_list = list2bool(reverses_list)  
-     
-    
-    token_replaces = config['Stage1_lm_inference'].get('token_replaces')
-    token_replaces = re.sub(" ","",token_replaces)
-    token_replaces = re.sub("\n","",token_replaces)
-    token_replaces_list = token_replaces.split("|")      
-    token_replaces_list = list2bool(token_replaces_list)  
-
-
-    
-    # parameters of save parameter       
-    save_path = config['Stage1_lm_inference'].get('SAVE_PATH') 
-    save_result = SaveResult(save_path)
-
-    
-    for csv_name in ASR_csv_names_list:
-        for lm_path in lm_paths_list:
-            inference_bert_lm = InferenceBertLm(csv_name, lm_path, device=device)
-            
-            for use_confusion_word in use_confusion_words_list:
-                for wwm in wwms_list:
-                    for reverse in reverses_list:
-                        for token_replace in token_replaces_list:
-                            LM_wer_avg, ASR_wer_avg, asr_predict, lm_predict_result, lm_wer_list, LM_err= inference_bert_lm.inference_test_data(use_confusion_word, wwm, reverse, token_replace)                            
-                                                      
-                            kwargs_lm = {'Inference_Mode':'LM', 'Input_File': csv_name, 'Model_Path':lm_path, 
-                                         'Ground_Truth':asr_predict, 'Predict_Result':lm_predict_result, 'Wer_list':lm_wer_list, 'Error_word':LM_err, 
-                                         'ASR_wer_avg':ASR_wer_avg,'LM_wer_avg':LM_wer_avg,                 
-                                         'wwm':wwm,'use_confusion_word':use_confusion_word,'reverse':reverse,'token_replace':token_replace,
-                                         'Py_file_name':file_name}    
-                            save_result.save_follow(**kwargs_lm)             
-            
-            del inference_bert_lm
+    # path = "config_asr_inference.ini"
+    # config = read_config(path)
+    config_path = "/home/c95hcw/ASR/config_LM_inference.yaml"
+    inference_bert_lm = InferenceBertLm(config_path)
+    inference_bert_lm.LM_inference_flow()    
             
             
             

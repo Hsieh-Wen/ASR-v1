@@ -1,0 +1,39 @@
+Stage0:
+  # Save folder
+  SAVE_FOLDER_NAME: /home/c95hcw/ASR_Data/Dataset/speech_ttt/
+
+  # Input Folder Parameters
+  INPUT_FILES:
+    Data_process1:
+      # file name
+      INTPUT_CSV_PATH: /home/c95hcw/ASR_Data/Dataset/raw_data/20210322_speech_tw/csvs/91BqH/91BqH.csv
+      CSV_COLUMN_LABEL: Labels
+
+      WORD_LEN_THRESHOLD: 2 
+      # parameters of split csv data
+      SPLIT_RATIO: 0.5 
+      # Vocab # Random # Sequence 
+      SPLIT_MODE: Sequence 
+      SEED: 3
+
+
+
+    Data_process2:
+      # file name
+      INTPUT_CSV_PATH: /home/c95hcw/ASR_Data/Dataset/raw_data/csvs/TW_meeting_time.csv
+      CSV_COLUMN_LABEL: labels
+
+      WORD_LEN_THRESHOLD: 2 
+      # parameters of split csv data
+      SPLIT_RATIO: 1.0
+      # Vocab # Random # Sequence 
+      SPLIT_MODE: Vocab 
+      SEED: 3
+
+Stage1:
+  # Save folder
+  SAVE_FOLDER_NAME: /home/c95hcw/LM_Correct/1_SoftMaskBert_FineTune/data/Dataset-v1.1/
+
+  # Input mode
+  PROCESS_MODES: 
+    - BERT 

@@ -9,26 +9,28 @@ Created on Wed Jan 20 13:40:35 2021
 
 import os
 import re
-import configparser
 
 import sys
 sys.path.append("./Utils")
-from MASR_data_preprocess import MasrDataPreprocess
-from Quartznet_data_preprocess import QuartznetDataPreprocess
-from Espnet_data_preprocess import EspnetDataProcess
+from load_config_args import load_config
+#from MASR_data_preprocess import MasrDataPreprocess
+#from Quartznet_data_preprocess import QuartznetDataPreprocess
+#from Espnet_data_preprocess import EspnetDataProcess
 from BERT_data_preprocess import BertDataPreprocess
 
-def read_config(path):
-    conf = configparser.ConfigParser()
-    candidates = [path]
-    conf.read(candidates)
-    return conf
-
 class LMDatasetPreprocess():
-    def __init__(self, data_folder):
-        self.data_folder = data_folder
-        stage0_folder = data_folder + "Stage0/"   
-        self.save_data_folder = data_folder + "Stage1/" 
+    def __init__(self, config_path):
+        """
+        Load config params.
+        """
+        args = load_config(config_path)
+        stage1_args = args.Stage1
+
+        self.process_modes = stage1_args['PROCESS_MODES']
+        self.data_folder = stage1_args['SAVE_FOLDER_NAME']
+
+        stage0_folder = self.data_folder + "Stage0/"    
+        self.save_data_folder = self.data_folder + "Stage1/" 
 
         if not os.path.exists(stage0_folder + "LM/"):
             sys.exit("Please run Data_preprocess_LM_stage0.py")
@@ -50,6 +52,7 @@ class LMDatasetPreprocess():
         (Output result to Stage1 folder)
         """
         if "&&" in train_mode:
+            train_mode = re.sub(" ","",train_mode)
             train_parameters = train_mode.split("&&")
             train_mode = train_parameters[0]
             train_parameter_data = train_parameters[1:]
@@ -72,27 +75,18 @@ class LMDatasetPreprocess():
 
         else:
             print(f"沒有此 train_mode: {train_mode} ！！")
-        print(f"-------------已完成 {train_mode} 資料前處理-------------")
 
-  
+
+    def process_flow(self):
+        for train_mode in self.process_modes:
+            self.prepare_data(train_mode)
+            print(f"-------------已完成 {train_mode} 資料前處理-------------")  
         
     
 if __name__ == "__main__":
-    path = "config_LM_data_process.ini"
-    config = read_config(path)
- 
-    # parameters of saving folder name    # "data_v1/"
-    data_folder = config['Stage1'].get('SAVE_FOLDER_NAME') 
-         
-    # preprocessing
-    train_modes = config['Stage1'].get('TRAIN_MODES') 
-    train_modes = re.sub(" ","",train_modes)
-    train_modes = re.sub("\n","",train_modes)
-    train_mode_list = train_modes.split("|")
-  
-    data_process = LMDatasetPreprocess(data_folder)
-    for train_mode in train_mode_list:
-        data_process.prepare_data(train_mode)
+    config_path = "/home/c95hcw/ASR/config_LM_data_process.yaml"
+    data_process = LMDatasetPreprocess(config_path)
+    data_process.process_flow()
 
 
 

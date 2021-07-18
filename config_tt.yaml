@@ -1,0 +1,19 @@
+# inital parameter
+DEVICE : gpu
+CONVERT_WORD : False 
+ASR_Models:
+  Model1: 
+    ASR_Mode: MASR
+    Model_Path: /home/c95hcw/ASR_Data/Models/ASR_models/MASR/MASR_v1.2.2/model_ma.pth
+
+# inference parameter 
+INFERENCE_FILEs : 
+  Infer_file3: 
+    WAV_FOLDER : ../ASR_Data/Dataset/raw_data/waves/
+    csv_file : /home/c95hcw/ASR_Data/Dataset/raw_data/csvs/my_record_time.csv
+
+
+# save parameter  data_tw_v1       
+SAVE_PATH : ../ASR_Data/Inference_Result/data_ttt/
+
+

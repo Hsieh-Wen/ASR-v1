@@ -10,7 +10,6 @@ Created on Tue Jan 19 09:53:48 2021
 
 import re
 import os
-import configparser
 import numpy as np
 
 import sys
@@ -18,6 +17,7 @@ sys.path.append("./Utils")
 sys.path.append("./Utils/masr_util")
 sys.path.append("./Utils/quartznet_util")
 
+from load_config_args import load_config
 from Save_Inference_Result import SaveResult
 
 from MASR_inference import MasrInference
@@ -26,53 +26,20 @@ from Espnet_inference import EspnetInference
 from Google_inference import GoogleInference
 
 
-def read_config(path):
-    conf = configparser.ConfigParser()
-    candidates = [path]
-    conf.read(candidates)
-    return conf
-
-
 class InferenceASRmodels():
-    def __init__(self, config):
+    def __init__(self, config_path):
         # Load config
-        # parameters of initial function
-        asr_modes = config['Stage0_asr_inference'].get('ASR_MODE')
-        self.device = config['Stage0_asr_inference'].get('DEVICE')    
-        model_paths = config['Stage0_asr_inference'].get('MODEL_PATH') 
+        self.args = load_config(config_path=config_path)
 
-        
-        # parameters of inference function
-        self.wav_folder = config['Stage0_asr_inference'].get('WAV_FOLDER')  
-        if self.wav_folder == "None":
-            self.wav_folder = ""  
-        inference_files = config['Stage0_asr_inference'].get('INFERENCE_FILE') 
-        self.convert_word = config['Stage0_asr_inference'].get('CONVERT_WORD')       
+        # parameters of initial function
+        self.device = self.args.DEVICE
+        self.convert_word = self.args.CONVERT_WORD
+
+        self.asr_models = self.args.ASR_Models
+        self.inference_files =  self.args.INFERENCE_FILEs
 
         # parameters of save parameter       
-        self.save_path = config['Stage0_asr_inference'].get('SAVE_PATH') 
-
-        # 
-        self._init_params(asr_modes, model_paths, inference_files)
- 
-    def _init_params(self, asr_modes, model_paths, inference_files):     
-        """
-        處理 config data. 
-        (str ---> list)        
-        """
-        asr_modes = re.sub(" ","",asr_modes)
-        asr_modes = re.sub("\n","",asr_modes)
-        self.asr_modes_list = asr_modes.split("|")    
-       
-        model_paths = re.sub(" ","",model_paths)
-        model_paths = re.sub("\n","",model_paths)
-        self.model_path_list = model_paths.split("|")    
-        assert len(self.asr_modes_list) == len(self.model_path_list),"asr_mode 或 model_path 數量不對！！請修改 config_asr_inference.ini 之 [ASR_MODE] 或 [model_path]"
-
-        inference_files = re.sub(" ","",inference_files)
-        inference_files = re.sub("\n","",inference_files)
-        self.inference_file_list = inference_files.split("|")    
-
+        self.save_path =  self.args.SAVE_PATH
     
     def Load_Model(self, model_path, device):
         """
@@ -84,6 +51,7 @@ class InferenceASRmodels():
                         ./Models/ASR_models/Espnet/espnet_v1/lm_train_lm_transformer_zh_char/valid.loss.ave_10best.pth`     
         """
         if "&&" in model_path:
+            model_path = re.sub(" ","",model_path)
             model_path = model_path.split("&&")
         else:
             model_path = model_path
@@ -127,6 +95,8 @@ class InferenceASRmodels():
         	- asr_predict_result: (list) 每個音檔的語音辨識結果
         	- wer_list: 每個音檔的語音辨識錯誤率
         """
+        if wav_folder == "None":
+            wav_folder = ""
         if self.asr_mode == "MASR":
             print("Inference with MASR model !")
             ASR_wer_avg, asr_truth, asr_predict_result, wer_list = self.masr_infer.masr_recognition(wav_folder, inference_file, convert_word)
@@ -148,12 +118,17 @@ class InferenceASRmodels():
 
     def inference_flow(self):
         save_result = SaveResult(self.save_path)
-        for asr_mode, model_path in zip(self.asr_modes_list, self.model_path_list):
-            self.asr_mode = asr_mode
-            for infer_file in self.inference_file_list:
+        Model_keys = self.asr_models.keys()
+        inferfile_keys = self.inference_files.keys()
+        for model_id in Model_keys:
+            self.asr_mode = self.asr_models[model_id]['ASR_Mode']
+            model_path = self.asr_models[model_id]['Model_Path']
+            for inferfile_id in inferfile_keys:
+                infer_file = self.inference_files[inferfile_id]['csv_file']
+                wav_folder = self.inference_files[inferfile_id]['WAV_FOLDER']
                 # Load ASR Model 
                 self.ASR_model = self.Load_Model(model_path, self.device)
-                ASR_wer_avg, asr_truth, asr_predict_result, wer_list = self.inference_data(self.wav_folder, infer_file, self.convert_word)
+                ASR_wer_avg, asr_truth, asr_predict_result, wer_list = self.inference_data(wav_folder, infer_file, self.convert_word)
 
                 kwargs = {'Inference_Mode':'ASR', 'Input_File': infer_file, 'Model_Path': model_path,
                           'ASR_wer_avg': ASR_wer_avg,
@@ -174,13 +149,11 @@ class InferenceASRmodels():
                     npz_data = np.load(npz_path, allow_pickle=True)
                     kwargs.update(npz_data)
                 save_result.save_follow(**kwargs)  
-                print(f"ASR_Model-{asr_mode}, Model_name-{model_path}, 檔名:{infer_file}, 平均wer= {ASR_wer_avg}")          
+                print(f"ASR_Model-{self.asr_mode}, Model_name-{model_path}, 檔名:{infer_file}, 平均wer= {ASR_wer_avg}")          
                 
                 
 if __name__ == "__main__":
-    path = "config_asr_inference.ini" #"config_asr_inference.ini"
-    config = read_config(path)
-
-    asr_inference = InferenceASRmodels(config)
+    config_path = "/home/c95hcw/ASR/config_ASR_inference.yaml"
+    asr_inference = InferenceASRmodels(config_path)
     asr_inference.inference_flow()    
  

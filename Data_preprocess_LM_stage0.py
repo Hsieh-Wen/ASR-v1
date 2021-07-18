@@ -5,10 +5,12 @@ Created on Fri Feb  5 10:36:11 2021
 
 @author: c95hcw
 """
-from Utils.CSV_utils import read_csv_file, combine_csv_files
-from Utils.Bulid_Vocabulary import bulid_vocab
+import sys
+sys.path.append("./Utils")
+from load_config_args import load_config
+from CSV_utils import read_lm_csv_file, combine_csv_files
+from Bulid_Vocabulary import bulid_vocab
 
-import configparser
 import json
 import pandas as pd
 import numpy as np
@@ -19,74 +21,73 @@ import os
 import sys
 
 
-def read_config(path):
-    conf = configparser.ConfigParser()
-    candidates = [path]
-    conf.read(candidates)
-    return conf
-
 class LmCsvDataPreporcessing():
-    def __init__(self, config):
+    def __init__(self, config_path):
         # load config params
-        self.seed = config['Stage0'].getint('SEED') 
-        save_folder_name = config['Stage0'].get('SAVE_FOLDER_NAME')        
-        input_csvs = config['Stage0'].get('INTPUT_CSV_PATH') 
-        self.word_len_threshold = config['Stage0'].getfloat('WORD_LEN_THRESHOLD') 
-        split_ratios = config['Stage0'].get('SPLIT_RATIO')
-        vocab_to_splits = config['Stage0'].get('VOCAB_TO_SPLIT') 
+        args = load_config(config_path=config_path)
+        stage0_args = args.Stage0
 
-        if os.path.exists(save_folder_name + "Stage0/LM/"):
+        self.input_files = stage0_args['INPUT_FILES']
+
+        save_folder_name = stage0_args['SAVE_FOLDER_NAME']
+        self.save_data_folder = save_folder_name + "Stage0/LM/" 
+        if os.path.exists(self.save_data_folder):
             sys.exit("資料夾已存在！！請修改 config_data_process.ini 之 [SAVE_FOLDER_NAME]") 
-    
-        # init params
-        self._init_params(save_folder_name, input_csvs, split_ratios, vocab_to_splits)
-        
-    def _init_params(self, save_folder_name, input_csvs, split_ratios, vocab_to_splits):
-        # parameters of saving folder name              
-        self.save_data_folder = save_folder_name + "Stage0/"
-        
-        # parameters of input path
-        input_csvs = re.sub(" ","",input_csvs)
-        input_csvs = re.sub("\n","",input_csvs)
-        self.csv_name_list = input_csvs.split("|")     
-        
-        csv_num = len(self.csv_name_list)
 
-        # parameters of split csv data
-        split_ratios = re.sub(" ","",split_ratios)
-        split_ratios = re.sub("\n","",split_ratios)
-        self.split_ratio_list = split_ratios.split("|")
-        assert csv_num == len(self.split_ratio_list),"split_ratio_list 數量不對！！請修改 config_data_process.ini 之 [SPLIT_RATIO]"
-        
-        vocab_to_splits = re.sub(" ","",vocab_to_splits)
-        vocab_to_splits = re.sub("\n","",vocab_to_splits)
-        self.if_vocab_list = vocab_to_splits.split("|")
-        assert csv_num == len(self.if_vocab_list),"vocab_to_splits 數量不對！！請修改 config_data_process.ini 之 [VOCAB_TO_SPLIT]"
+    def data_preprocess_parameters(self, parameters_dict): 
 
-    def process_flow(self):
+        self.check_data_parameter_exist(parameters_dict)
+
+        self.csv_name = parameters_dict['INTPUT_CSV_PATH']
+        self.csv_column_label = parameters_dict['CSV_COLUMN_LABEL']
+
+        self.word_len_threshold = parameters_dict['WORD_LEN_THRESHOLD']
+        self.split_ratio =  parameters_dict['SPLIT_RATIO']
+        self.split_mode =  parameters_dict['SPLIT_MODE']
+        self.seed =  parameters_dict['SEED']
         
-        data_parameter_dict = dict()    
-        for i, csv_name in enumerate(self.csv_name_list):
-            print(f"\n--------------DATA PREPROCESSING - LM--{csv_name}----------------")
-    
-            split_ratio = float(self.split_ratio_list[i])
-            vocab_to_split = self.if_vocab_list[i]
+        self.print_paremeters()
+
+    def check_data_parameter_exist(self, parameters_dict):
+        # input csv         
+        if 'INTPUT_CSV_PATH' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of INTPUT_CSV_PATH")   
+
+        # Parameters of word         
+        if 'WORD_LEN_THRESHOLD' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of WORD_LEN_THRESHOLD")      
             
-            # save setting data of data preprocessing
-            data_parameter_dict['Corpus_' + str(i)] = self.data_process(csv_name, split_ratio, vocab_to_split)
-            
-        # 合併 train/valid corpus 內所有 csv 為 train.csv / valid.csv
-        self.combine_train_valid_corpus(self.save_data_folder + "LM/", self.save_data_folder + "LM/")        
-        
-        # save data process parameter to json
-        json_path = self.save_data_folder + "LM/" + 'lm_data_processing_parameter.json'
-        self.save_json(json_path, data_parameter_dict)
-        
-    def data_process(self, csv_name, split_ratio, vocab_to_split):
-        self._init_csv_cropus(csv_name)
+        # parameters of split csv data            
+        if 'SPLIT_RATIO' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of SPLIT_RATIO")  
+        if 'SPLIT_MODE' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of SPLIT_MODE")  
+        if 'SEED' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of SEED")  
+
+    def print_paremeters(self):
+        print(f"{self.csv_name=}.")
+        print(f"{self.word_len_threshold=}.")
+        print(f"{self.split_ratio=}.")
+        print(f"{self.split_mode=}.")
+        print(f"{self.seed=}.")
+
+
+    def _word_process(self, csv_name, split_ratio, split_mode):
+        self._init_csv_cropus(csv_name,self.csv_column_label)
         
         # split csv data
-        train_data, valid_data = self.get_training_and_testing_sets(split_ratio, vocab_to_split, self.seed)
+        train_data, valid_data = self.get_training_and_testing_sets(split_ratio, split_mode, self.seed)
 
         # remove same data
         train_data = self.remove_same_data(train_data)
@@ -101,9 +102,29 @@ class LmCsvDataPreporcessing():
         return {'csv_name': csv_name, 
                 'word_len_threshold':self.word_len_threshold,
                 'split_ratio': split_ratio,
-                'vocab_to_split': vocab_to_split,
+                'split_mode': split_mode,
                 'seed':self.seed,
                 'save_folder_name': self.save_data_folder}
+
+
+    def process_flow(self):
+        
+        data_parameter_dict = dict()    
+        for i, input_file_id in enumerate(self.input_files.keys()):
+            self.data_preprocess_parameters(self.input_files[input_file_id])
+            print(f"\n--------------DATA PREPROCESSING - LM--{self.csv_name}----------------")
+
+            # save setting data of data preprocessing
+            data_parameter_dict['Corpus_' + str(i)] = self._word_process(self.csv_name, self.split_ratio, self.split_mode)
+            
+        # 合併 train/valid corpus 內所有 csv 為 train.csv / valid.csv
+        self.combine_train_valid_corpus(self.save_data_folder, self.save_data_folder)        
+        
+        # save data process parameter to json
+        json_path = self.save_data_folder + 'lm_data_processing_parameter.json'
+        self.save_json(json_path, data_parameter_dict)
+        
+
         
         
     @staticmethod
@@ -114,7 +135,7 @@ class LmCsvDataPreporcessing():
         
         
         
-    def _init_csv_cropus(self, csv_name):
+    def _init_csv_cropus(self, csv_name, csv_column_label):
         """Load text from csv.
 
         Args:
@@ -122,33 +143,34 @@ class LmCsvDataPreporcessing():
         """
         self.csv_name = csv_name
         self.data_path = csv_name
-        _ , asr_truth = read_csv_file(csv_name)
+        asr_truth = read_lm_csv_file(csv_name, csv_column_label)
         self.asr_truth = self.delete_blank(asr_truth) # 去除label檔中的空格
 
     
-    def get_training_and_testing_sets(self, split_ratio, vocab_to_split=False, seed=3):
+    def get_training_and_testing_sets(self, split_ratio, split_mode, seed=3):
         """
         將 csv file 分割成 train list 與 valid list，
         * Input :
             - split_ratio: 分割比例(default: train:valid = 8:2)
-            - vocab_to_split: 選擇分割方法
+            - split_mode: 選擇分割方法
             - seed: 隨機排序的種子數
         
                 兩種分割方法:
-                    * vocab_to_split = True
+                    * split_mode = Vocab
                         根據字頻(每個字在資料集內出現的頻率)，
                         字頻較多之句子，並以 split_ratio 的比例作為 validation data.
-                    * vocab_to_split = False
+                    * split_mode = Random
                         將資料集做隨機排序，
                         再以 split_ratio 的比例分割 train 和 validation data.  
         * Output :
             training_list: 分割好的 train list ; 若split_ratio=0.0, 則 train list ＝ [].
             validation_list:  分割好的 valid list ; 若split_ratio=1.0, 則 valid list ＝ [].       
         """
-         
-        if vocab_to_split == True:
+
+
+        if split_mode == "Vocab":
             
-            vocabulary, sorted_vob, vocab_json_path = bulid_vocab(self.data_path, _ , save_file = False)
+            vocabulary, sorted_vob, vocab_json_path = bulid_vocab(self.data_path, "no_save" , save_file = False, csv_column_label=self.csv_column_label)
             
             vocab = dict((x,y) for x,y in sorted_vob)
             counter_all = []
@@ -162,12 +184,17 @@ class LmCsvDataPreporcessing():
             for item in vocab_sorted_list:
                 file_o_list.append(item[0])
         
-        else:
-            file_list =  self.asr_truth
+        elif split_mode == "Random":
+            file_list = list(self.asr_truth)    
             random.seed(seed)
             random.shuffle(file_list)
-            file_o_list = list(file_list)
-            
+            file_o_list = list(labels)
+
+        elif split_mode == "Sequence":
+            file_o_list = list(self.asr_truth) 
+        else:
+            sys.exit("No this split_mode !!!!!")
+
         split_index = floor(len(file_o_list) * split_ratio)
         training_list = file_o_list[:split_index]
         validation_list = file_o_list[split_index:]
@@ -232,7 +259,7 @@ class LmCsvDataPreporcessing():
             (default save folder  = csv file 的資料夾內)
             (default save name = *_train.csv or *_valid.csv)
         """    
-        save_lm_folder = save_data_folder + "LM/"
+        save_lm_folder = save_data_folder
         if not os.path.exists(save_lm_folder):
             os.makedirs(save_lm_folder)  
 
@@ -302,8 +329,6 @@ class LmCsvDataPreporcessing():
 #  Main Code
 # =============================================================================
 if __name__ == "__main__":
-    path = "config_LM_data_process.ini"
-    config = read_config(path)
-    
-    csv_data_processing = LmCsvDataPreporcessing(config)
+    config_path = "/home/c95hcw/ASR/config_LM_data_process.yaml"
+    csv_data_processing = LmCsvDataPreporcessing(config_path)
     csv_data_processing.process_flow()

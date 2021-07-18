@@ -5,10 +5,12 @@ Created on Fri Feb  5 10:36:11 2021
 
 @author: c95hcw
 """
-from Utils.CSV_utils import read_csv_file, combine_csv_files, save_dataframe_to_npz
-from Utils.Bulid_Vocabulary import bulid_vocab
+import sys
+sys.path.append("./Utils")
+from load_config_args import load_config
+from CSV_utils import read_csv_file, combine_csv_files, save_dataframe_to_npz
+from Bulid_Vocabulary import bulid_vocab
 
-import configparser
 import json
 import pandas as pd
 import numpy as np
@@ -24,92 +26,114 @@ from shutil import copyfile
 from distutils.dir_util import copy_tree
 
 
-def read_config(path):
-    conf = configparser.ConfigParser()
-    candidates = [path]
-    conf.read(candidates)
-    return conf
 
 class AsrCsvDataPreporcessing():
-    def __init__(self, config):
+    def __init__(self, config_path):
         """
         Load config params.
         """
-        self.seed = config['Stage0'].getint('SEED') 
-        save_folder_name = config['Stage0'].get('SAVE_FOLDER_NAME')        
-        data_folder = config['Stage0'].get('DATA_FOLDER')
-        input_csvs = config['Stage0'].get('INTPUT_CSV_PATH') 
+        args = load_config(config_path=config_path)
+        stage0_args = args.Stage0
 
-        self.duration_threshold = config['Stage0'].getfloat('WAVE_TIME_THRESHOLD') 
-        self.sample_rate = config['Stage0'].getint('SAMPLERATE')  
-        self.save_new_wav = config['Stage0'].getboolean('SAVE_NEW_WAVE')          
+        self.input_files = stage0_args['INPUT_FILES']
+
+        self.save_folder_name = stage0_args['SAVE_FOLDER_NAME']
+        self.save_data_folder = self.save_folder_name + "Stage0/ASR/"
+        if os.path.exists(self.save_folder_name + "Stage0/ASR/"):
+            sys.exit("資料夾已存在！！請修改 config_data_process.ini 之 [SAVE_FOLDER_NAME]") 
+   
+    def data_preprocess_parameters(self, parameters_dict): 
+
+        self.check_data_parameter_exist(parameters_dict)
+
+        data_folder = parameters_dict['DATA_FOLDER']
+        self.csv_folder = data_folder + "csvs/"
+        self.wav_folder = data_folder + "waves/" 
+
+        self.csv_name = parameters_dict['INTPUT_CSV_PATH']
+        self.csv_column_wav = parameters_dict['CSV_COLUMN_WAV']
+        self.csv_column_label = parameters_dict['CSV_COLUMN_LABEL']
+
+        self.duration_threshold = parameters_dict['WAVE_TIME_THRESHOLD']
+        self.sample_rate = parameters_dict['SAMPLERATE']  
+        self.save_new_wav = parameters_dict['SAVE_NEW_WAVE']         
         if self.save_new_wav:
-            self.wav_folder_new = save_folder_name + "waves/"
+            self.wav_folder_new = self.save_folder_name + "waves/"
             if not os.path.exists(self.wav_folder_new):
                 os.makedirs(self.wav_folder_new)
 
-        split_ratios = config['Stage0'].get('SPLIT_RATIO')
-        split_modes = config['Stage0'].get('SPLIT_MODE') 
-        data_expands = config['Stage0'].get('DATA_EXPAND_value') 
+        self.split_ratio =  parameters_dict['SPLIT_RATIO']
+        self.split_mode =  parameters_dict['SPLIT_MODE']
+        self.seed =  parameters_dict['SEED']
+        self.expand_value =  parameters_dict['DATA_EXPAND_value']    
+        
+        self.print_paremeters()
 
-        if os.path.exists(save_folder_name + "Stage0/ASR/"):
-            sys.exit("資料夾已存在！！請修改 config_data_process.ini 之 [SAVE_FOLDER_NAME]") 
-    
-        # init params
-        self._init_params(save_folder_name, input_csvs, data_folder, split_ratios, split_modes, data_expands)
-        
-    def _init_params(self, save_folder_name, input_csvs, data_folder, split_ratios, split_modes, data_expands):
-        """
-        config data(str to list).
-        """
+    def check_data_parameter_exist(self, parameters_dict):
+        # input csv
+        if 'DATA_FOLDER' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of DATA_FOLDER")               
+        if 'INTPUT_CSV_PATH' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of INTPUT_CSV_PATH")  
 
-        # parameters of saving folder name    # "data_v1/"
-        self.save_data_folder = save_folder_name + "Stage0/"
-        
-        # parameters of input path
-        input_csvs = re.sub(" ","",input_csvs)
-        input_csvs = re.sub("\n","",input_csvs)
-        if "|" in input_csvs:
-            self.csv_name_list = input_csvs.split("|")     
+        if 'CSV_COLUMN_WAV' in parameters_dict:
+            pass
         else:
-            self.csv_name_list = []
-            self.csv_name_list.append(input_csvs)
-        
-        csv_num = len(self.csv_name_list)
-        print(csv_num)
-        self.csv_folder = data_folder + "csvs/"
-        self.wav_folder = data_folder + "waves/" 
-    
-        # parameters of split csv data
-        split_ratios = re.sub(" ","",split_ratios)
-        split_ratios = re.sub("\n","",split_ratios)
-        if "|" in split_ratios:
-            self.split_ratio_list = split_ratios.split("|")     
+            sys.exit("Please input data of CSV_COLUMN_WAV")       
+        if 'CSV_COLUMN_LABEL' in parameters_dict:
+            pass
         else:
-            self.split_ratio_list = []
-            self.split_ratio_list.append(split_ratios)
-        assert csv_num == len(self.split_ratio_list),"split_ratio_list 數量不對！！請修改 config_data_process.ini 之 [SPLIT_RATIO]"
-    
-        split_modes = re.sub(" ","",split_modes)
-        split_modes = re.sub("\n","",split_modes)
-        if "|" in split_modes:
-            self.split_mode_list = split_modes.split("|")     
+            sys.exit("Please input data of CSV_COLUMN_LABEL")
+
+        # Parameters of audio file         
+        if 'SAVE_NEW_WAVE' in parameters_dict:
+            pass
         else:
-            self.split_mode_list = []
-            self.split_mode_list.append(split_modes)
-        assert csv_num == len(self.split_mode_list),"split_modes 數量不對！！請修改 config_data_process.ini 之 [SPLIT_MODE]"
-                
-        # parameters of if expand data (default=10)
-        data_expands = re.sub(" ","",data_expands)
-        data_expands = re.sub("\n","",data_expands)
-        if "|" in data_expands:
-            self.expand_value_list = data_expands.split("|")     
+            sys.exit("Please input data of SAVE_NEW_WAVE")      
+            
+        if 'SAMPLERATE' in parameters_dict:
+            pass
         else:
-            self.expand_value_list = []
-            self.expand_value_list.append(data_expands)       
-        assert csv_num == len(self.expand_value_list),"data_expands 數量不對！！請修改 config_data_process.ini 之 [DATA_EXPAND]"
-    
-    def _init_csv_cropus(self, csv_name):
+            sys.exit("Please input data of SAMPLERATE")
+        if 'WAVE_TIME_THRESHOLD' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of WAVE_TIME_THRESHOLD")   
+
+        # parameters of split csv data            
+        if 'SPLIT_RATIO' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of SPLIT_RATIO")  
+        if 'SPLIT_MODE' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of SPLIT_MODE")  
+        if 'SEED' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of SEED")  
+        if 'DATA_EXPAND_value' in parameters_dict:
+            pass
+        else:
+            sys.exit("Please input data of DATA_EXPAND_value")  
+
+    def print_paremeters(self):
+        csv_path = self.csv_folder + self.csv_name
+        print(f"{csv_path=}.")
+        print(f"{self.save_new_wav}.")
+        print(f"{self.sample_rate}.")
+        print(f"{self.duration_threshold=}.")
+        print(f"{self.split_ratio=}.")
+        print(f"{self.split_mode=}.")
+        print(f"{self.seed=}.")
+        print(f"{self.expand_value=}.")
+
+    def _init_csv_cropus(self, csv_name, csv_column_wav, csv_column_label):
         """
         Load csv data.
         * Input:
@@ -118,12 +142,12 @@ class AsrCsvDataPreporcessing():
             wave_names : wave's pathes (list). 
             asr_truth : wave's labels (list).
         """
-        self.csv_name = csv_name
+        # self.csv_name = csv_name
         self.data_path = self.csv_folder + csv_name
-        wave_names, asr_truth = read_csv_file(self.csv_folder + csv_name)
+        wave_names, asr_truth = read_csv_file(self.csv_folder + csv_name, csv_column_wav, csv_column_label)
 
         # save original csv data
-        save_npz_folder = self.save_data_folder + "ASR/org_csvdata/"
+        save_npz_folder = self.save_data_folder + "org_csvdata/"
         if not os.path.exists(save_npz_folder):
             os.makedirs(save_npz_folder)
 
@@ -209,7 +233,7 @@ class AsrCsvDataPreporcessing():
         """
 
         # Load csv data
-        wave_names, asr_truth = self._init_csv_cropus(csv_name)
+        wave_names, asr_truth = self._init_csv_cropus(csv_name, self.csv_column_wav, self.csv_column_label)
 
         # Get self.wave_names, self.asr_truth, self.wave_times
         self.csv_data_preprocess(wave_names, asr_truth)
@@ -235,22 +259,18 @@ class AsrCsvDataPreporcessing():
         ASR data preprocess flow.
         """
         data_parameter_dict = dict()    
-        for i, csv_name in enumerate(self.csv_name_list):
-            print(f"\n--------------DATA PREPROCESSING--{csv_name}----------------")
-    
-            split_ratio = float(self.split_ratio_list[i])
-            split_mode = self.split_mode_list[i]
-            expand_value = float(self.expand_value_list[i])
-            
+        for i, input_file_id in enumerate(self.input_files.keys()):
+            self.data_preprocess_parameters(self.input_files[input_file_id])           
+            print(f"\n--------------DATA PREPROCESSING--{self.csv_name}----------------")
             self.corpus_num = i
             # save setting data of data preprocessing
-            data_parameter_dict['Corpus_' + str(i)] = self.data_process(csv_name, split_ratio, split_mode, expand_value)
+            data_parameter_dict['Corpus_' + str(i)] = self.data_process(self.csv_name, self.split_ratio, self.split_mode, self.expand_value)
             
         # 合併 train/valid corpus 內所有 csv 為 train.csv / valid.csv
-        self.combine_train_valid_corpus(self.save_data_folder + "ASR/", self.save_data_folder + "ASR/")        
+        self.combine_train_valid_corpus(self.save_data_folder , self.save_data_folder )        
         
         # save data process parameter to json
-        json_path = self.save_data_folder + "ASR/" + 'asr_data_processing_parameter.json'
+        json_path = self.save_data_folder + 'asr_data_processing_parameter.json'
         self.save_json(json_path, data_parameter_dict)
         
 
@@ -286,7 +306,7 @@ class AsrCsvDataPreporcessing():
 
         if split_mode == "Vocab":
             
-            vocabulary, sorted_vob, vocab_json_path = bulid_vocab(self.data_path, _ , save_file = False)
+            vocabulary, sorted_vob, vocab_json_path = bulid_vocab(self.data_path, "no_save" , save_file = False, csv_column_label=self.csv_column_label)
             
             vocab = dict((x,y) for x,y in sorted_vob)
             counter_all = []
@@ -369,7 +389,7 @@ class AsrCsvDataPreporcessing():
             (default save folder  = csv file 的資料夾內)
             (default save name = *_train.csv or *_valid.csv)
         """    
-        save_asr_folder = save_data_folder + "ASR/"
+        save_asr_folder = save_data_folder 
         if not os.path.exists(save_asr_folder):
             os.makedirs(save_asr_folder)  
 
@@ -539,8 +559,7 @@ class AsrCsvDataPreporcessing():
 #  Main Code
 # =============================================================================
 if __name__ == "__main__":
-    path = "config_ASR_data_process.ini"
-    config = read_config(path)
-    
-    csv_data_processing = AsrCsvDataPreporcessing(config)
+    config_path = "/home/c95hcw/ASR/config_ASR_data_process.yaml"
+    csv_data_processing = AsrCsvDataPreporcessing(config_path)
     csv_data_processing.process_flow()
+            
